@@ -14,7 +14,25 @@
 
 fn main() {
     tauri::Builder::default()
-        // .invoke_handler(tauri::generate_handler![greet])
+    .setup(|app| {
+            let handle = app.handle();
+            tauri::async_runtime::spawn(async move {
+                  match handle
+                    .updater()
+                    .unwrap()
+                    .check()
+                    .await
+                  {
+                    Ok(update) => {
+                       update.download_and_install().await;
+                    }
+                    Err(e) => {
+                      println!("ERROR: {}", e);
+                    }
+                  }
+                });
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
